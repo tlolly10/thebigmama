@@ -1,45 +1,55 @@
 export default async function handler(req, res) {
   try {
-    // Import the server entry built by TanStack Start
+    // Dynamic import of the server entry
     const { default: serverEntry } = await import('../dist/server/index.js');
     
     if (!serverEntry || typeof serverEntry !== 'function') {
       throw new Error('Server entry point is not properly exported');
     }
 
-    // Create fetch-compatible request
-    const url = `http://${req.headers.host}${req.url}`;
+    // Build the full URL
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+    const url = `${protocol}://${host}${req.url}`;
+
+    // Build request init object
     const init = {
       method: req.method,
-      headers: Object.entries(req.headers).reduce((acc, [key, value]) => {
-        acc[key] = Array.isArray(value) ? value.join(',') : value;
-        return acc;
-      }, {}),
+      headers: req.headers,
     };
 
     // Add body for non-GET requests
-    if (!['GET', 'HEAD'].includes(req.method) && req.body) {
-      init.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    if (!['GET', 'HEAD'].includes(req.method)) {
+      if (typeof req.body === 'string') {
+        init.body = req.body;
+      } else if (req.body) {
+        init.body = JSON.stringify(req.body);
+      }
     }
 
-    const request = new Request(url, init);
-    const response = await serverEntry(request);
+    // Call the server entry point
+    const response = await serverEntry(new Request(url, init));
+
+    // Set response status
+    res.statusCode = response.status;
 
     // Set response headers
     response.headers.forEach((value, key) => {
       res.setHeader(key, value);
     });
 
-    // Send response
-    res.status(response.status);
-    res.send(await response.text());
+    // Send response body
+    const text = await response.text();
+    res.end(text);
   } catch (error) {
     console.error('Server error:', error);
-    res.status(500).json({ 
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({
       error: 'Internal Server Error',
       message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
+    }));
   }
 }
+
 
