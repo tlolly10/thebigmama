@@ -1,9 +1,9 @@
 export default async function handler(req, res) {
   try {
     // Import the server entry built by TanStack Start
-    const { default: serverEntry } = await import('../dist/server.mjs');
+    const { default: serverEntry } = await import('../dist/server/index.js');
     
-    if (!serverEntry || typeof serverEntry.fetch !== 'function') {
+    if (!serverEntry || typeof serverEntry !== 'function') {
       throw new Error('Server entry point is not properly exported');
     }
 
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
 
     const request = new Request(url, init);
-    const response = await serverEntry.fetch(request, process.env, {});
+    const response = await serverEntry(request);
 
     // Set response headers
     response.headers.forEach((value, key) => {
@@ -37,7 +37,8 @@ export default async function handler(req, res) {
     console.error('Server error:', error);
     res.status(500).json({ 
       error: 'Internal Server Error',
-      message: error.message 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }
