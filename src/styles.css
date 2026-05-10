@@ -4,13 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@font-face {
-  font-family: "Bangers";
-  src: url("https://fonts.gstatic.com/s/bangers/v24/FeVQS0BTqb0h60ACL5la2bxii28.woff2") format("woff2");
-  font-display: swap;
-}
-
-@import url("https://fonts.googleapis.com/css2?family=Bangers&family=Anton&family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700;800&display=swap");
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -38,8 +32,8 @@
   --color-ring: var(--ring);
   --color-cream: var(--cream);
   --color-ink: var(--ink);
-  --font-display: "Bangers", "Anton", system-ui, sans-serif;
-  --font-heading: "Anton", system-ui, sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-heading: "Oswald", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
 }
 
