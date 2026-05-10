@@ -4,13 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@font-face {
-  font-family: "Bangers";
-  src: url("https://fonts.gstatic.com/s/bangers/v24/FeVQS0BTqb0h60ACL5la2bxii28.woff2") format("woff2");
-  font-display: swap;
-}
-
-@import url("https://fonts.googleapis.com/css2?family=Bangers&family=Anton&family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700;800&display=swap");
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
