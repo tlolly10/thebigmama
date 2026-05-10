@@ -1,55 +1,42 @@
 export default async function handler(req, res) {
   try {
-    // Dynamic import of the server entry
-    const { default: serverEntry } = await import('../dist/server/index.js');
+    // Import the server entry built by TanStack Start
+    const serverEntry = await import('../dist/server/index.js');
     
-    if (!serverEntry || typeof serverEntry !== 'function') {
-      throw new Error('Server entry point is not properly exported');
+    // The serverEntry from Vinxi/TanStack Start (Cloudflare target) 
+    // usually has fetch on default or directly on the module
+    const fetchHandler = serverEntry.fetch || serverEntry.default?.fetch;
+
+    if (!fetchHandler) {
+      console.error('Available keys:', Object.keys(serverEntry));
+      throw new Error('Server entry fetch handler not found. check logs for available keys.');
     }
 
-    // Build the full URL
+    const host = req.headers.host || 'localhost';
     const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
-    const url = `${protocol}://${host}${req.url}`;
+    const url = new URL(req.url, `${protocol}://${host}`);
 
-    // Build request init object
-    const init = {
+    const response = await fetchHandler(new Request(url, {
       method: req.method,
       headers: req.headers,
-    };
+      body: ['GET', 'HEAD'].includes(req.method) ? undefined : req.body,
+    }));
 
-    // Add body for non-GET requests
-    if (!['GET', 'HEAD'].includes(req.method)) {
-      if (typeof req.body === 'string') {
-        init.body = req.body;
-      } else if (req.body) {
-        init.body = JSON.stringify(req.body);
-      }
-    }
-
-    // Call the server entry point
-    const response = await serverEntry(new Request(url, init));
-
-    // Set response status
     res.statusCode = response.status;
-
-    // Set response headers
-    response.headers.forEach((value, key) => {
-      res.setHeader(key, value);
-    });
-
-    // Send response body
-    const text = await response.text();
-    res.end(text);
+    response.headers.forEach((value, key) => res.setHeader(key, value));
+    
+    const body = await response.arrayBuffer();
+    res.end(Buffer.from(body));
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('SSR Bridge Error:', error);
     res.statusCode = 500;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({
-      error: 'Internal Server Error',
+    res.end(JSON.stringify({ 
+      error: 'Internal Server Error', 
       message: error.message,
+      stack: error.stack 
     }));
   }
 }
+
 
 
