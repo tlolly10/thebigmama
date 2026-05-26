@@ -91,6 +91,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
+    scripts: [
+      {
+        src: "http://localhost:3000/widget.js",
+        "data-restaurant-id": "c9cc0f7b-432e-4737-8bf0-3b036058af56",
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
